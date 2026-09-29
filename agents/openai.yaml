@@ -1,0 +1,5 @@
+interface:
+  display_name: "拷问并沉淀文档（Obsidian）"
+  short_description: "拷问计划或设计，同时把术语与决策写进 Obsidian 知识库"
+policy:
+  allow_implicit_invocation: false
