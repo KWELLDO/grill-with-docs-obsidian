@@ -2,7 +2,7 @@
 
 ADR 住在 `docs/adr/`，顺序编号 `0001-slug.md`、`0002-slug.md`……slug 用 kebab-case 英文。
 
-**编号**：扫 `docs/adr/` 取最大号加一，文件名 `0001-slug.md`。**目录懒创建** —— 第一条真正够格的决策出现时才建。
+**编号**：扫 `docs/adr/` 取最大号加一，文件名 `0001-slug.md`。**目录懒创建** —— 第一条真正够格的决策出现时才建。**零填充到四位**（`0001`…`9999`），这样按文件名排序就是编号顺序，不需要任何额外配置。
 
 ## 模板
 
@@ -11,14 +11,13 @@ ADR 住在 `docs/adr/`，顺序编号 `0001-slug.md`、`0002-slug.md`……slug 
 title: 写模型采用事件溯源
 date: 2026-09-29
 context: ordering
-terms:
-  - "[[order]]"
-  - "[[invoice]]"
 ---
 
 # 写模型采用事件溯源
 
 订单侧的写模型事件溯源，读模型投影进 Postgres：结算口径要能重算，任何"当前状态"都必须可由事件序列复现。
+
+涉及术语：[订单](../../glossary/order.md)、[发票](../../glossary/invoice.md)
 
 ## 考虑过的方案
 
@@ -36,25 +35,24 @@ terms:
 | 字段 | 必填 | 说明 |
 |---|---|---|
 | `title` | 是 | 决策的一句话标题 |
-| `status` | 否 | `proposed` / `accepted` / `deprecated` / `superseded by ADR-NNNN`。**默认不写** —— 缺省即 `accepted`。只有当这条决策的状态存疑或将来会变时才写：还没和用户敲定（`proposed`）、已被推翻（`deprecated`）、被另一条取代（`superseded by ADR-NNNN`） |
 | `date` | 是 | `YYYY-MM-DD` |
 | `context` | 是 | kebab-case 上下文 slug；系统级决策写 `system` |
-| `terms` | 否 | 这条决策用到的术语双链。**只写已存在的卡** |
+| `status` | 否 | `proposed` / `deprecated` / `superseded by ADR-NNNN`。**默认不写** —— 缺省即 accepted。只有当这条决策的状态存疑或将来会变时才写 |
 
-**编号不存成字段。** 编号就是文件名（`0001-event-sourced-write-model` 里的 `0001`），`decisions.base` 用 `formula.adr_no: 'file.name.split("-")[0]'` 派生一列。两条理由，缺一不可：
+**编号不存成字段。** 编号就是文件名（`0001-event-sourced-write-model` 里的 `0001`）。两条理由：
 
-- **YAML 会吃掉前导零**：`id: 0001` 解析成数字 `1`，Base 里渲染成 `1`，编号就错位了。
+- **YAML 会吃掉前导零**：写 `id: 0001` 会被解析成数字 `1`，编号就错位了。
 - **它冗余于文件名**，与术语卡不存 `slug` 是同一条道理：同一信息存两遍必然漂移。
 
-**零填充到四位**（`0001`…`9999`）：Base 按文件名排就是编号顺序，不需要额外的排序配置。
+**涉及的术语不存 frontmatter。** 纯 md 里 frontmatter 的字符串不是可点的链接，改用正文一行「涉及术语：[订单](../../glossary/order.md)、[发票](../../glossary/invoice.md)」。这样在 GitHub 上能直接点进去，校验脚本也能顺着检查。
 
 ## 规则
 
 - 正文第一段 1–3 句讲清：什么处境、定了什么、为什么。**一个 ADR 写成一段是合法的**。价值在于记录**决策发生过**和**为什么**，不在于填满章节。
 - **可选章节只在真能加价值时出现。** 大多数 ADR 不需要。`考虑过的方案` 只在被否掉的备选值得记住时才写；`后果` 只在非显然的下游影响需要点出时才写。
-- **术语在正文里写成 `[[slug]]`**，并在 `terms` frontmatter 里列一遍。散文里出现「订单」而 frontmatter 挂着 `[[order]]`，两种触发都覆盖到。
-- `superseded` 的决策不删，状态改掉，并在正文加一行指向取代它的那条。
-- **状态存疑时才写 `status`。** 落盘一条 ADR 意味着这条决策已经和用户敲定过了，因此多数 ADR 没有 `status` 行；`decisions.base` 的「未定与已废弃」视图靠 `status` 字段筛选，缺省的那些自然落在「全部决策」视图里。
+- **术语在正文里写相对链接**，放进「涉及术语」那一行。
+- `superseded` 的决策不删，`status` 改掉，并在正文加一行指向取代它的那条。
+- **状态存疑时才写 `status`。** 落盘一条 ADR 意味着这条决策已经和用户敲定过了，因此多数 ADR 没有 `status` 行；要列出未定的决策，用 `grep -l "status: proposed" docs/adr/*.md`。
 
 ## 什么时候提出来写
 

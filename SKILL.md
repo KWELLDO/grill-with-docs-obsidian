@@ -1,14 +1,16 @@
 ---
-name: grill-with-docs-obsidian
-description: 中文版「拷问 + 沉淀文档」：不依不饶地追问一个计划或设计，把过程中敲定的术语和不可逆的决策当场写进 Obsidian 知识库（双链术语卡 + ADR + 索引页 + Bases 表，可用则走官方 obsidian CLI 校验）。Use when the user wants to stress-test / grill / 拷问 / 追问 / 压力测试 一个想法、方案或设计，并希望在过程中无损沉淀术语与决策。Obsidian 变体，配套 grilling、domain-modeling、obsidian-cli/bases/markdown 使用，不修改这些 skill。
+name: grill-with-docs-md
+description: 中文版「拷问 + 沉淀文档」，纯 Markdown 实现：不依不饶地追问一个计划或设计，把过程中敲定的术语和不可逆的决策当场写进仓库（术语卡 + ADR + 索引页 + 链接校验），不依赖 Obsidian、Bases 或任何 CLI。Use when the user wants to stress-test / grill / 拷问 / 追问 / 压力测试 一个想法、方案或设计，并希望在过程中无损沉淀术语与决策。配套 grilling、domain-modeling 使用，不修改它们。
 disable-model-invocation: true
 ---
 
-# 拷问并沉淀文档
+# 拷问并沉淀文档（纯 Markdown）
 
-用 Obsidian 承载「拷问」的产物。两条纪律同时进行：**每一个决策都问到底**，**每一个术语和决策当场写进库里**。
+两条纪律同时进行：**每一个决策都问到底**，**每一个术语和决策当场写进仓库**。
 
-本 skill 是 `grilling` + `domain-modeling` 的 **Obsidian 变体**：这两个 skill 的行为已在此中文重写并加强，**不修改它们**。不属于 Obsidian 增强的领域知识（仓库布局、`CONTEXT-MAP.md` 格式、上下文关系）以 `domain-modeling` 的 `CONTEXT-FORMAT.md` 为准。
+本 skill 是「拷问 + 沉淀」的**可移植实现**：产物是普通 Markdown，任何编辑器、任何 Git 仓库、任何代码平台都能读，不需要 Obsidian、不需要 Bases、不需要任何 CLI。
+
+它同时是 `grill-with-docs-obsidian` 的**解耦版**。两者共享同一套拷问纪律与术语纪律；差别只在一件事：**术语与决策如何被发现和查询**。那个版本靠 Obsidian 的双链、Bases 表和 CLI；这个版本靠相对链接、索引页和一段校验脚本。
 
 ## 术语（本文内部用语）
 
@@ -23,57 +25,29 @@ disable-model-invocation: true
 
 ---
 
-## 零、开工前：定位库
+## 零、开工前：定位仓库
 
-1. 确认 vault 根：仓库根目录（用户会用 Obsidian「打开文件夹」）。若已存在 `CONTEXT.md` 则是索引页，已存在 `CONTEXT-MAP.md` 则是多上下文。
-2. **把已有产物读全了再开口。** 读法按 Base 走 —— Base 的行就是这些文件，读它们等价于读表：
-   - **CLI 可用时**：`obsidian vault=$V base:query path=glossary.base view=全部术语 format=md` 与 `path=decisions.base view=全部决策 format=md` 各跑一次，拿到的就是全量数据；再 `obsidian vault=$V unresolved` 确认库本身没有遗留死链。
-   - **CLI 不可用时**：读 `glossary/*.md` 与 `docs/adr/*.md` 的 frontmatter 和正文（数据完全相同），并读 `glossary.base` / `decisions.base` 拿字段定义（顺便确认表的结构与设想一致）。
-   - `CONTEXT.md`：分组清单与两张表的概览。
-   - 库里的**其他笔记**（日记、会议记录、需求文档）同样在读的范围：用户此前对这个项目的思考散在那里，先捞一遍，免得把已经定过的结论重新问一遍。
+1. 确认根目录与 project slug（产物都写在仓库根下）。
+2. **把已有产物读全了再开口。** 读三处：
+   - `glossary/*.md` 的 frontmatter 与正文 —— 已有术语。
+   - `docs/adr/*.md` 的 frontmatter 与正文 —— 已记录的决策。
+   - `CONTEXT.md` —— 索引页，全量清单与待敲定项的概览。
+   - 仓库里**其他文档**（设计稿、会议记录、需求）也在读的范围：用户此前对这个项目的思考散在那里，先捞一遍，免得把已经定过的结论重新问一遍。
 3. **带着已有词进入拷问。** 已有的术语不重新发明，已记录的决策不重新讨论；两者若与用户此刻的说法冲突，把冲突摆出来问，而不是默默采信新说法。
 4. 目录按需懒创建，**没有内容就不建**：
 
 ```
-<vault 根>/
-├── CONTEXT.md              ← 索引页（人读清单 + 嵌入两张 Base 表）
-├── CONTEXT-MAP.md          ← 仅多上下文时
-├── glossary/               ← 术语卡，一个概念一个文件
-├── docs/adr/               ← 决策记录，0001-slug.md 顺序编号
-├── glossary.base           ← 术语总表
-└── decisions.base          ← 决策总表
+<仓库根>/
+├── CONTEXT.md          索引页：术语清单 + 决策清单 + 待敲定项，全部用相对链接
+├── glossary/           术语卡，一个概念一个文件
+│   ├── order.md
+│   └── customer.md
+├── docs/adr/           决策记录，0001-slug.md
+│   └── 0001-event-sourced-write-model.md
+└── <源码目录>/
 ```
 
-目录**英语**，文件**英语**，但**术语本身用中文**（`glossary/order.md` 里 `term: 订单`），所以双链 `[[order]]` 稳定、概念无损。
-
-## 〇·一、Obsidian CLI：能用就用
-
-**先探测**：`obsidian vaults` 能列出 vault 名 = CLI 可用（需 Obsidian 正在运行）。报错或空输出 = 不可用，**本节全部命令跳过**，改用普通文件读写，并告知用户「CLI 不可用，本次用文件方式落盘」。下文 `$V` = 目标 vault 名。
-
-官方 CLI 能力、`file` 与 `path` 的区别、插件/主题开发命令见 `obsidian-cli` skill；`.base` 的 schema 与函数语法见 `obsidian-bases` skill；双链、嵌入、frontmatter 属性语法见 `obsidian-markdown` skill。**这三个 skill 是本 skill 的上位参考，格式细则以它们为准。**
-
-| 动作 | 命令 |
-|---|---|
-| 读术语总表 | `obsidian vault=$V base:query path=glossary.base view=全部术语 format=md` |
-| 读待敲定术语 | `obsidian vault=$V base:query path=glossary.base view=待敲定 format=md` |
-| 读决策总表 | `obsidian vault=$V base:query path=decisions.base view=全部决策 format=md` |
-| **全库死链（收尾硬门槛）** | `obsidian vault=$V unresolved` |
-| 某张卡的来源 | `obsidian vault=$V backlinks path=glossary/order.md counts` |
-| 别名注册情况 | `obsidian vault=$V aliases verbose` |
-| 孤立笔记 / 无出链笔记 | `obsidian vault=$V orphans` / `deadends` || 读改 frontmatter | `obsidian vault=$V property:read name=status path=...` / `property:set name=status value=deprecated` |
-| 搜库 | `obsidian vault=$V search:context query="订单" path=glossary` |
-| **术语改名（连双链）** | `obsidian vault=$V rename file=<旧slug> name=<新slug>` |
-
-**读和验证走 CLI，写走文件工具。** 分工不是偏好：CLI 强在拿到 Obsidian 自己的图谱视角（`base:query` 是真按 Base 过滤渲染，文件系统视角拿不到；`unresolved` 是权威死链清单）；而 `create content=` / `append content=` 传多行 YAML 要转义换行和缩进，极易被 shell 吃掉。建卡、改 frontmatter、改名用文件工具更稳。
-
-**六个实测坑：**
-
-1. **`base:views` 不接受 `path`** —— 它只看当前活动文件，会报 `Active file is not a base file`。要么先 `open path=glossary.base`，要么直接用 `base:query view=<名字>`。
-2. **CLI 的 `format=md` 表头用原始属性名**（`title`、`status`），不套自定义 `displayName`（`formula.*` 列除外）。核数据用属性名。
-3. **`base:query` 的第一列值是不带扩展名的文件名**（`order`，不是 `order.md`）—— 双链、文件名对不上时先记住这条。
-4. **新写完文件，Obsidian 可能还没索引完**，此刻查 `unresolved` / `backlinks` 结果不对，先 `obsidian vault=$V reload` 再查。
-5. **`reload` 之后 vault 会短暂不可用** —— Obsidian 正在重挂 socket，此刻任何命令都报 `Vault not found`（`backlinks` 会报「Command not found」）。等两三秒，或用 `obsidian vaults` 确认 vault 回来了再查。
-6. **改名必须用 `obsidian rename`，不能用文件工具 `mv`。** 实测：`mv` 改名会让所有指向旧名的双链变成死链（术语卡、ADR、索引页里全是）；`obsidian rename file=<旧名> name=<新名>` 会**自动改写全部双链**。术语卡改名时（`term` 换词 → 文件名跟着换）这是唯一安全的做法。
+目录**英语**，文件名**英语**，但**术语本身用中文**（`glossary/order.md` 里 `term: 订单`），所以链接稳定、跨语言可读、排序不炸。
 
 ## 一、拷问：设计树 + 前沿分轮
 
@@ -103,15 +77,14 @@ disable-model-invocation: true
 
 术语是这次工作最贵的产物。**一个术语敲定的那个瞬间就写进 `glossary/<slug>.md`，不要攒到最后批量处理。** 格式见 [TERM-FORMAT.md](./TERM-FORMAT.md)。
 
-过程中持续做三件事：
+持续做四件事：
 
 - **拿术语表挑战用户的用词。** 用户说出一个与 `glossary/` 已有定义冲突的词，立刻点破：「你定义的『取消』是 X，但你现在说的像是 Y。到底哪个对？」
 - **把模糊、混用的词收敛成一个规范术语。**「你说的『账户』：是指 Customer 还是 User？那是两个东西。」定下后立刻建卡。
 - **用具体场景压边界。** 讨论领域关系时，编边界场景逼用户把概念之间的界说清楚：「只有一条订单行时取消，和整单取消，走的是同一条流程吗？」
+- **和代码对照。** 用户陈述某个机制如何运作时，去代码里核对。发现矛盾就摊开：「你的代码取消的是整张 Order，但你刚说可以部分取消。哪个是对的？」
 
-**只收本项目特有的概念。** 通用编程概念（超时、错误类型、工具函数模式）不属于这里，即使项目里用得很多。加词前自问：这是这个上下文独有的概念，还是通用编程概念？只有前者才建卡。
-
-**和代码对照。** 用户陈述某个机制如何运作时，去代码里核对。发现矛盾就摊开：「你的代码取消的是整张 Order，但你刚说可以部分取消。哪个是对的？」
+**只收本项目特有的概念。** 通用编程概念（超时、错误类型、工具函数模式）不属于这里，即使项目里用得很多。加词前自问：这是这个上下文独有的概念，还是通用编程概念？只有前者才建卡 —— 一个塞满超时和错误类型的 `glossary/` 会让术语表彻底失去信噪比。
 
 ## 三、决策记录（ADR）：三条全中才写
 
@@ -123,28 +96,34 @@ disable-model-invocation: true
 
 缺任何一条就不写：好逆转就逆转，不反常就没人会问，没有替代方案就没有超出「我们做了显而易见的事」的东西值得记。
 
-**什么够格**：架构形态；上下文之间的集成模式；有锁定成本的技术选择（数据库、消息总线、认证供应商、部署目标 —— 不是每个库，而是那些换起来要花一个季度的）；边界与范围决策（「客户数据归 Customer 上下文所有，其他上下文只按 ID 引用」，明确的「不」和「是」一样值钱）；刻意偏离显然路径的做法（「用裸 SQL 而不是 ORM，因为 X」——凡是正常读者会以为相反的地方）；代码里看不见的约束（合规、对外 API 契约）；以及**拒绝理由不明显的备选项**（否则六个月后会有人再提一次 GraphQL）。
+**什么够格**：架构形态；上下文之间的集成模式；有锁定成本的技术选择（数据库、消息总线、认证供应商、部署目标 —— 不是每个库，而是那些换起来要花一个季度的）；边界与范围决策（「客户数据归 Customer 上下文所有，其他上下文只按 ID 引用」，明确的「不」和「是」一样值钱）；刻意偏离显然路径的做法（「用裸 SQL 而不是 ORM，因为 X」—— 凡是正常读者会以为相反的地方）；代码里看不见的约束（合规、对外 API 契约）；以及**拒绝理由不明显的备选项**（否则六个月后会有人再提一次 GraphQL）。
 
-## 四、Obsidian 落盘规则
+## 四、纯 Markdown 落盘规则
 
-1. **双链术语。** ADR 正文、索引页、术语卡之间提到一个已建卡的术语时，写成 `[[order]]` 而不是「订单」。这让 Obsidian 的反向链接面板把散落各处的用法收拢到一处。
-2. **frontmatter 是必填。** 术语卡和 ADR 都带 frontmatter —— 两张 `.base` 表的数据源就是它。字段见格式文件。
-3. **`.base` 懒创建。** 建第一张术语卡时写 `glossary.base`，写第一条 ADR 时写 `decisions.base`。两者都永远滞后于数据：每新增或改动一张卡/ADR，若它引入了新的属性值（新的 `context`、新的 `status`），同步更新对应 `.base` 的筛选与分组。模板见 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。用 Base 读、写、核对库，是这个 skill 面对 Obsidian 的默认姿势。
-4. **写完 `.base` 拿 schema 核对键名。** Obsidian 对未知键静默忽略，表能渲染 ≠ 写对了。对着 `obsidian-bases` skill 的 schema 逐个核。
-5. **索引页是活页。** 新术语建卡、新 ADR 落盘后，把 `CONTEXT.md` 的清单和嵌入同步 —— 见 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。
+1. **链接一律用相对路径的 Markdown 链接，不用 `[[双链]]`。** 术语卡之间、ADR 与术语之间、索引页到一切：`[订单](./order.md)`、`[订单](../../glossary/order.md)`、[`0001`](./docs/adr/0001-event-sourced-write-model.md)。这样 GitHub、任何编辑器、任何静态站点生成器、任何 `grep` 都能用；`[[双链]]` 只在 Obsidian 里成立。
+2. **frontmatter 只留有用得上的字段。** 每个字段都要能被至少一个动作消费（下面的校验脚本、索引页生成、待敲定清单）。没有机械用途的字段不加 —— 纯 md 没有「别名自动命中」这种能力，所以本版本**不设 `aliases`**，用户实际会用的同义说法写进正文。
+3. **正文里提到一个已建卡的术语时，用相对链接指向它**，不要只写词。这是反向可追溯的替代品：没有反链面板，就靠链接本身。
+4. **索引页是活页。** 新术语建卡、新 ADR 落盘后，同步 `CONTEXT.md` 的清单与待敲定项 —— 见 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。
+5. **改名用 `git mv`，并用校验脚本确认没有断链。** 纯 md 没有工具替你改写引用，所以改名必须走「`git mv` → 跑校验 → 修掉断链」三步。
 6. **一切懒创建**：没有可写的东西就不建文件、不建目录。
 
-## 五、每轮结束时的收尾清单
+## 五、校验：脚本，不靠眼睛
 
-一轮作答落地后，逐条确认再进入下一轮：
+纯 md 的代价是没有工具兜底，所以**每次落盘后跑一次校验**，用它代替 Obsidian 的反链面板。脚本见 [INDEX-FORMAT.md](./INDEX-FORMAT.md) 的「校验脚本」，它检查：
+
+- 每个相对链接都指向真实存在的文件（**断链检查**）
+- frontmatter 能解析，必填字段齐全
+- 没有残留 `[[双链]]`、`![[嵌入]]`、`.base` 或 obsidian 命令
+- `CONTEXT.md` 的清单与 `glossary/`、`docs/adr/` 下的实际文件一致
+- 被链引用的术语卡都真实存在，且没有一张卡从未被任何文档链接（**孤儿卡**）
+
+### 每轮结束时的收尾清单
 
 - 本轮定下的每个术语，都已建成 `glossary/<slug>.md`（不是「待会儿一起写」）
-- 本轮涉及、且满足三条条件的决策，都已落 `docs/adr/`，并已把术语双链进正文
-- `CONTEXT.md` 清单、两张 `.base` 与实际文件一致
-- **`CONTEXT.md` 内嵌 `![[glossary.base]]` / `![[decisions.base]]` 时，那两个 `.base` 文件已经写好** —— 索引页先于 base 文件落盘会瞬时产生死链，顺序是 base 先、索引页后
-- **CLI 可用时：`obsidian vault=$V unresolved` 返回空**。这是权威死链清单，比自己数双链可靠；刚改完文件先 `reload` 再查
-- **本轮改过术语名：用 `obsidian rename` 而不是 `mv`** —— 后者会静默留下断链
-- 反向链接可用：每张新卡的 `related` 字段指向的卡都真实存在（`obsidian vault=$V backlinks path=<新卡> counts` 能看到来源）
+- 本轮涉及、且满足三条条件的决策，都已落 `docs/adr/`，并已把术语用相对链接链进正文
+- `CONTEXT.md` 清单、待敲定项与实际文件一致
+- **校验脚本通过**：无断链、无孤儿卡、必填字段齐全
+- 反向可追溯可用：每张新卡的「相关」小节指向的卡都真实存在
 
 **不要在用户确认达成共识之前实现任何东西。**
 
@@ -154,12 +133,4 @@ disable-model-invocation: true
 
 - [TERM-FORMAT.md](./TERM-FORMAT.md) —— 术语卡格式与 frontmatter 字段
 - [ADR-FORMAT.md](./ADR-FORMAT.md) —— ADR 格式与 frontmatter 字段
-- [INDEX-FORMAT.md](./INDEX-FORMAT.md) —— `CONTEXT.md` 索引页与两个 `.base` 模板
-
-## 上位参考（Obsidian 侧）
-
-- `obsidian-cli` —— CLI 全部命令、`file` 与 `path` 的区别
-- `obsidian-bases` —— `.base` 的完整 schema、filter 语法、函数
-- `obsidian-markdown` —— 双链、嵌入、frontmatter 属性语法
-
-这三个装不上或不可用时，本 skill 自带的内容仍足够完成全部工作（零·一节自动跳过），只是少了图谱视角的校验。
+- [INDEX-FORMAT.md](./INDEX-FORMAT.md) —— 索引页格式与校验脚本

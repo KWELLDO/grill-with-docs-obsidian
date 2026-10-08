@@ -1,5 +1,5 @@
 interface:
-  display_name: "拷问并沉淀文档（Obsidian）"
-  short_description: "拷问计划或设计，同时把术语与决策写进 Obsidian 知识库"
+  display_name: "拷问并沉淀文档（纯 Markdown）"
+  short_description: "追问计划或设计，把术语与决策写进仓库；纯 Markdown，不依赖 Obsidian"
 policy:
   allow_implicit_invocation: false
