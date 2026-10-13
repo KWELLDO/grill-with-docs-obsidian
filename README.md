@@ -1,6 +1,6 @@
 # grill-with-docs-obsidian
 
-中文版「拷问 + 沉淀文档」：不依不饶地追问一个计划或设计，把过程中敲定的**术语**和不可逆的**决策**当场写进 Obsidian 知识库（双链术语卡 + ADR + 索引页 + Bases 表）。
+中文版「拷问 + 沉淀文档」：不依不饶地追问一个计划或设计，把过程中敲定的**术语**和不可逆的**决策**当场写进 Obsidian 知识库（双链术语卡 + ADR + 索引页 + Bases 表）。带决策分层与授权：设计 DAG 以节点笔记形式落在 `nodes/`，图谱视图可见；ISO 四层（意图 / 架构 / 实现 / 运行）；托管策略表定谁考虑、谁提交。
 
 上游是 [mattpocock/skills](https://github.com/mattpocock/skills) 的 `grill-with-docs`（组合 `grilling` + `domain-modeling`）。本仓库是它的 **Obsidian 变体**，**不修改、不替代**上游那两个 skill。
 
@@ -10,7 +10,7 @@
 
 1. **概念无损** —— 术语一个概念一张卡（`glossary/<slug>.md`），落选的词和排除理由写在正文里而不是只列词表
 2. **可连通** —— ADR、索引页、术语卡之间全部双链，Obsidian 的反链面板把散落各处的用法收拢到一处
-3. **可查询** —— `glossary.base` / `decisions.base` 两张表，「哪些术语还没敲定」这类问题一条命令就能答
+3. **可查询** —— `glossary.base` / `decisions.base` / `nodes.base` 三张表，「哪些术语还没敲定」这类问题一条命令就能答
 
 ## 安装
 
@@ -44,12 +44,14 @@ npx skills add kepano/obsidian-skills@obsidian-cli kepano/obsidian-skills@obsidi
 
 ```
 <项目仓库根>/
-├── CONTEXT.md          索引页：按 context 分组的双链清单 + 内嵌两张 Base
+├── CONTEXT.md          索引页：按 context 分组的双链清单 + 内嵌三张 Base
 ├── CONTEXT-MAP.md      仅多上下文时
 ├── glossary/           术语卡，一个概念一个文件
 ├── docs/adr/           决策记录，0001-slug.md
 ├── glossary.base       术语总表
-└── decisions.base      决策总表
+├── decisions.base      决策总表
+├── nodes/              设计 DAG 节点，一个决策一个文件
+└── nodes.base          节点总表
 ```
 
 目录与文件名用英文，术语内容用中文（`glossary/order.md` 里 `term: 订单`），所以双链 `[[order]]` 稳定、跨语言可读、Base 排序不炸。
@@ -59,7 +61,7 @@ npx skills add kepano/obsidian-skills@obsidian-cli kepano/obsidian-skills@obsidi
 - [`SKILL.md`](./SKILL.md) —— 主文件：拷问机制、术语纪律、ADR 纪律、CLI 接入、落盘规则
 - [`TERM-FORMAT.md`](./TERM-FORMAT.md) —— 术语卡格式与 frontmatter 字段
 - [`ADR-FORMAT.md`](./ADR-FORMAT.md) —— 决策记录格式与 frontmatter 字段
-- [`INDEX-FORMAT.md`](./INDEX-FORMAT.md) —— 索引页与两个 `.base` 模板
+- [`INDEX-FORMAT.md`](./INDEX-FORMAT.md) —— 索引页、托管策略段、nodes.base 与节点笔记格式
 - [`docs/对比实验与设计决策.md`](./docs/对比实验与设计决策.md) —— **改造过程 + 与原版的同题对比实验**
 - [`experiment/`](./experiment/) —— 对比实验的种子、复现步骤与关键证据
 
