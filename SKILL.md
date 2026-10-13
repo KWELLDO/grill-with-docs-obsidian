@@ -10,6 +10,8 @@ disable-model-invocation: true
 
 本 skill 是 `grilling` + `domain-modeling` 的 **Obsidian 变体**：这两个 skill 的行为已在此中文重写并加强，**不修改它们**。不属于 Obsidian 增强的领域知识（仓库布局、`CONTEXT-MAP.md` 格式、上下文关系）以 `domain-modeling` 的 `CONTEXT-FORMAT.md` 为准。
 
+用户用中文沟通时，按 [ZH.md](./ZH.md) 的对照表命名文件、文件夹与 frontmatter 取值；frontmatter 的字段名保持英文。
+
 ## 术语（本文内部用语）
 
 - **拷问**：下面的提问循环。
@@ -64,7 +66,7 @@ disable-model-invocation: true
 └── decisions.base          ← 决策总表
 ```
 
-目录**英语**，文件**英语**，但**术语本身用中文**（`glossary/order.md` 里 `term: 订单`），所以双链 `[[order]]` 稳定、概念无损。
+英文为默认；用户用中文时按 [ZH.md](./ZH.md) 的对照表命名（文件夹、文件名、frontmatter 取值），术语内容始终用中文（`glossary/order.md` 里 `term: 订单`），所以双链 `[[order]]` 稳定、概念无损。
 
 ### 0.2 初始化：冻结托管策略
 
@@ -270,7 +272,7 @@ disable-model-invocation: true
 
 1. **双链术语。** ADR 正文、索引页、术语卡之间提到一个已建卡的术语时，写成 `[[order]]` 而不是「订单」。这让 Obsidian 的反向链接面板把散落各处的用法收拢到一处。
 2. **frontmatter 是必填。** 术语卡和 ADR 都带 frontmatter —— 三张 `.base` 表（glossary.base、decisions.base、nodes.base）的数据源就是它。字段见格式文件。
-3. **`.base` 懒创建。** `glossary.base`（第一张术语卡落盘时写）、`decisions.base`（第一条 ADR 落盘时写）、`nodes.base`（第一个节点落盘时写）—— 三者的模板都在 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。它们都永远滞后于数据：每新增或改动一张卡/ADR/节点，若它引入了新的属性值（新的 `context`、新的 `status`、新的 `state`），同步更新对应 `.base` 的筛选与分组。用 Base 读、写、核对库，是这个 skill 面对 Obsidian 的默认姿势。
+3. **`.base` 懒创建。** `glossary.base`（第一张术语卡落盘时写）、`decisions.base`（第一条 ADR 落盘时写）、`nodes.base`（第一个节点落盘时写）—— 三者的模板都在 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。它们都永远滞后于数据：每新增或改动一张卡/ADR/节点，若它引入了新的属性值（新的 `context`、新的 `status`、新的 `state`），同步更新对应 `.base` 的筛选与分组。目录改名（见 [ZH.md](./ZH.md)）后，同步改对应 `.base` 里的 `file.inFolder()` 路径。用 Base 读、写、核对库，是这个 skill 面对 Obsidian 的默认姿势。
 4. **写完 `.base` 拿 schema 核对键名。** Obsidian 对未知键静默忽略，表能渲染 ≠ 写对了。对着 `obsidian-bases` skill 的 schema 逐个核。
 5. **索引页是活页。** 新术语建卡、新 ADR 落盘后，把 `CONTEXT.md` 的清单和嵌入同步 —— 见 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。
 6. **一切懒创建**：没有可写的东西就不建文件、不建目录。
@@ -305,6 +307,7 @@ disable-model-invocation: true
 - [TERM-FORMAT.md](./TERM-FORMAT.md) —— 术语卡格式与 frontmatter 字段
 - [ADR-FORMAT.md](./ADR-FORMAT.md) —— ADR 格式与 frontmatter 字段
 - [INDEX-FORMAT.md](./INDEX-FORMAT.md) —— `CONTEXT.md` 索引页、托管策略段、`nodes.base` 与节点笔记格式
+- [ZH.md](./ZH.md) —— 中文命名对照表（英文标识符 → 中文命名）
 
 ## 上位参考（Obsidian 侧）
 
