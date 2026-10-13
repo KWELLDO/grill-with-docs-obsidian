@@ -333,6 +333,6 @@ created: 2026-10-13
 - **`aliases` 列只有一个用途**：一眼看出哪些词会命中哪张卡。发现同一个词出现在不同卡的 `aliases` 里，就是别名冲突 —— Base 查不出这种重复（它按行看，不按值看），靠眼睛扫这一列。
 - `displayName` 用中文，`filters` / `properties` / `formulas` / `views` 这些**键名保持英文**（Obsidian Bases 的固定 schema）。完整 schema 与函数语法见 `obsidian-bases` skill。
 - `.base` 依赖 Bases 核心插件。你的库若未启用（`.obsidian/core-plugins.json` 里 `"bases": true`），就只保留 `CONTEXT.md` 里的双链清单，`.base` 跳过并在收尾时说明原因。
-- **托管策略段在初始化时冻结**，只在校准时改。
+- **托管策略段在初始化时冻结**，只在校准时改。托管策略表的『谁考虑』『谁提交』格子只写『人』或『AI』（意图层人可请 AI 协助，但不写进格子）。
 - **`nodes.base` 懒创建**（第一个节点落盘时写）；新增的 `layer` / `state` 取值要同步进 `groupBy` 与 `filters`。
 - **图谱方向靠箭头**：看连线用图谱，开 Show arrows 看方向（后继→前置）；AND/OR 看节点笔记与 `nodes.base`。

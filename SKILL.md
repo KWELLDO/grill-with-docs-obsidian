@@ -48,6 +48,7 @@ disable-model-invocation: true
    - **`nodes/*.md`**：已有决策节点（frontmatter 的 `state`、`gate`，正文的 `## 前置` / `## 修改入口`）。CLI 可用时前沿候选一眼看全：`obsidian vault=$V base:query path=nodes.base view=前沿候选 format=md`。
    - `CONTEXT.md`：分组清单、三张表的概览，以及**托管策略段**。
    - 库里的**其他笔记**（日记、会议记录、需求文档）同样在读的范围：用户此前对这个项目的思考散在那里，先捞一遍，免得把已经定过的结论重新问一遍。
+   - **设计文档**：记下它的章节清单，供会话结束前的覆盖检查用（见第二节）。
 3. **带着已有词进入拷问。** 已有的术语不重新发明，已记录的决策不重新讨论；两者若与用户此刻的说法冲突，把冲突摆出来问，而不是默默采信新说法。
 4. 目录按需懒创建，**没有内容就不建**：
 
@@ -74,13 +75,23 @@ disable-model-invocation: true
 
 | 层 | 谁考虑 | 谁提交 | 路径生成 |
 |---|---|---|---|
-| 意图 | 人（AI 可协助） | 人 | 低 |
+| 意图 | 人 | 人 | 低 |
 | 架构 | AI | 人 | 高 |
 | 实现 | AI | AI | 中 |
 | 运行 | AI | AI | 低 |
 
-用户可在初始化时改任意格。
+用户可在初始化时改任意格。意图层人可请 AI 协助，但考虑与提交归人。
 3. **写入 `CONTEXT.md` 的托管策略段并冻结**。格式见 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。`CONTEXT.md` 是**唯一不等内容就建的文件**（它是索引页/活页，托管策略表要落在上面）。
+
+### 0.3 既有资产
+
+初始化时一并处理既有资产，默认值在初始化时呈现给人确认：
+
+- **`CONTEXT.md` 已存在且不是索引页**（散文或已有定义区）：在顶部插入 frontmatter 与托管策略段，原内容保留。已有定义区（如 `## Language`）视为既有定义，不迁移为卡片；新术语写进 `glossary/`。
+- **既有 ADR 没有 frontmatter**：补最小 frontmatter（`title`、`date`、`context`）。`date` 用文件首次入库日期：`git log --follow --diff-filter=A --format=%as -- <文件>`。正文不动。
+- **既有术语没有卡片**：默认不迁移，除非人指定。
+- **既有决策日志（如 `DECISIONS.md`）**：不纳入技能，除非人指定。
+- 以上默认值写进初始化的呈现内容。
 
 ## 〇·一、Obsidian CLI：能用就用
 
@@ -99,7 +110,7 @@ disable-model-invocation: true
 | **全库死链（收尾硬门槛）** | `obsidian vault=$V unresolved` |
 | 某张卡的来源 | `obsidian vault=$V backlinks path=glossary/order.md counts` |
 | 别名注册情况 | `obsidian vault=$V aliases verbose` |
-| 孤立笔记 / 无出链笔记 | `obsidian vault=$V orphans` / `deadends` |
+| 孤立笔记 / 无出链笔记 | `obsidian vault=$V orphans` / `deadends`（代码仓库里整库都会被算作孤儿，此命令不可用于代码仓库，只在纯笔记库里用） |
 | 读改 frontmatter | `obsidian vault=$V property:read name=status path=...` / `property:set name=status value=deprecated` |
 | 搜库 | `obsidian vault=$V search:context query="订单" path=glossary` |
 | **术语改名（连双链）** | `obsidian vault=$V rename file=<旧slug> name=<新slug>` |
@@ -190,13 +201,15 @@ disable-model-invocation: true
 
 **轮推进**：本轮若有 ❓ 则停下等答案；只有 🔧 则 AI 声明后继续，直到出现 ❓ 或前沿为空。用户对某个 🔧 有异议，则该节点重开（`state` 改回 `open`）。
 
-**每个节点先落盘为笔记。** 任何在轮次里出现的决策，先写成 `nodes/<slug>.md`（`state: open`），这就是**介入标记** —— 节点笔记本身在图谱里可见、可点开；轮次输出里另加 🔧 / ❓。状态变化用 `property:set` 维护（settled / dropped）。格式见 [INDEX-FORMAT.md](./INDEX-FORMAT.md) 的「节点笔记」段。
+**每个节点先落盘为笔记。** 任何在轮次里出现的决策，先写成 `nodes/<slug>.md`（`state: open`），这就是**介入标记** —— 节点笔记本身在图谱里可见、可点开；轮次输出里另加 🔧 / ❓。状态变化用 `property:set` 维护（settled / dropped）。格式见 [INDEX-FORMAT.md](./INDEX-FORMAT.md) 的「节点笔记」段。节点的 state、标题或结论变动（含重开）后，同步 `CONTEXT.md` 的 `## 节点` 清单。
 
 每轮回应都会重塑 DAG：已决节点把前沿向外推，解开原先被阻塞的问题。**重算前沿**再走下一轮。答案依赖本轮另一个未决问题的，归入**后续轮**，不现在问。
 
 **事实归 AI。** 需要环境事实（文件系统、工具、依赖）时，派 sub-agent 去查，绝不问用户你能自己查到的东西。也不要在它上面干等：一个正在跑的探查就是一个未决的前置，只有它下游的问题等报告，前沿其余部分照现在处理。
 
 会话在**前沿为空**时结束：DAG 每条分支都走过，没有东西被默认掉。**在用户确认已达成共识之前，不要动手实现。**
+
+**会话结束前做一次覆盖检查**：列出设计文档的章节 → 决策点映射，每章节一行，标注「已开节点 / 不在本轮（写明理由）/ 外部依赖」。映射中仍有未处理的决策点时，不得以「前沿为空」结束 —— 要么开节点，要么标为不在本轮并请人确认。
 
 ## 三、术语纪律：当场落盘
 
@@ -257,14 +270,13 @@ disable-model-invocation: true
 
 1. **双链术语。** ADR 正文、索引页、术语卡之间提到一个已建卡的术语时，写成 `[[order]]` 而不是「订单」。这让 Obsidian 的反向链接面板把散落各处的用法收拢到一处。
 2. **frontmatter 是必填。** 术语卡和 ADR 都带 frontmatter —— 三张 `.base` 表（glossary.base、decisions.base、nodes.base）的数据源就是它。字段见格式文件。
-3. **`.base` 懒创建。** 建第一张术语卡时写 `glossary.base`，写第一条 ADR 时写 `decisions.base`。两者都永远滞后于数据：每新增或改动一张卡/ADR，若它引入了新的属性值（新的 `context`、新的 `status`），同步更新对应 `.base` 的筛选与分组。模板见 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。用 Base 读、写、核对库，是这个 skill 面对 Obsidian 的默认姿势。
+3. **`.base` 懒创建。** `glossary.base`（第一张术语卡落盘时写）、`decisions.base`（第一条 ADR 落盘时写）、`nodes.base`（第一个节点落盘时写）—— 三者的模板都在 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。它们都永远滞后于数据：每新增或改动一张卡/ADR/节点，若它引入了新的属性值（新的 `context`、新的 `status`、新的 `state`），同步更新对应 `.base` 的筛选与分组。用 Base 读、写、核对库，是这个 skill 面对 Obsidian 的默认姿势。
 4. **写完 `.base` 拿 schema 核对键名。** Obsidian 对未知键静默忽略，表能渲染 ≠ 写对了。对着 `obsidian-bases` skill 的 schema 逐个核。
 5. **索引页是活页。** 新术语建卡、新 ADR 落盘后，把 `CONTEXT.md` 的清单和嵌入同步 —— 见 [INDEX-FORMAT.md](./INDEX-FORMAT.md)。
 6. **一切懒创建**：没有可写的东西就不建文件、不建目录。
 7. **节点笔记的 frontmatter 与正文格式**见 [INDEX-FORMAT.md](./INDEX-FORMAT.md) 的「节点笔记」段。
-8. **`nodes.base` 与 glossary.base、decisions.base 一样懒创建** —— 在第一个节点落盘时写。
-9. **节点改名同样用 `obsidian rename`**（双链会自动改写）。
-10. **节点的 state 变化用 `property:set`**，不要手改 frontmatter 的其他行。
+8. **节点改名同样用 `obsidian rename`**（双链会自动改写）。
+9. **节点的 state 变化用 `property:set`**，不要手改 frontmatter 的其他行。
 
 ## 七、每轮结束时的收尾清单
 
@@ -278,10 +290,11 @@ disable-model-invocation: true
 - **`CONTEXT.md` 的清单与托管策略段一致**
 - **`CONTEXT.md` 内嵌 `![[glossary.base]]` / `![[nodes.base]]` / `![[decisions.base]]` 时，那些 `.base` 文件已经写好** —— 索引页先于 base 文件落盘会瞬时产生死链，顺序是 base 先、索引页后
 - **CLI 可用时：`obsidian vault=$V unresolved` 返回空**。这是权威死链清单，比自己数双链可靠；刚改完文件先 `reload` 再查
-- **CLI 可用时：`obsidian vault=$V orphans` 无新增的孤立节点**
+- **`nodes/` 下每个非根节点的 `## 前置` 都非空，根节点写「无」**
+- **`CONTEXT.md` 的 `## 节点` 清单中每个节点的 state 与标题，与节点文件一致**
 - **本轮改过术语名：用 `obsidian rename` 而不是 `mv`** —— 后者会静默留下断链
 - **本轮无「本该 AI 却抛给用户」的节点** —— 有的话，是托管策略表画错了，提校准
-- 反向链接可用：每张新卡的 `related` 字段指向的卡都真实存在（`obsidian vault=$V backlinks path=<新卡> counts` 能看到来源）
+- 反向链接可用：每张新卡的「**相关**」小节里双链的目标都真实存在（`obsidian vault=$V backlinks path=<新卡> counts` 能看到来源）
 
 **不要在用户确认达成共识之前实现任何东西。**
 
